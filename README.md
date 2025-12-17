@@ -2,9 +2,9 @@
 
 ## TODOs 
 
-- [ ] Z1
-- [ ] Z1 -> Robotiq
+- [x] Z1
+- [x] Z1 -> Robotiq
 - [ ] xArm7
 - [ ] xArm7 -> mujoco
 - [ ] B1
-- [ ] Realsense D435i
+- [x] Realsense D435i
