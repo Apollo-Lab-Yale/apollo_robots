@@ -1,5 +1,4 @@
 import requests
-import numpy as np
 
 # Global base URL for the Z1 robot API
 ROBOT_API_URL = "http://192.168.123.220:12000/unitree/z1"

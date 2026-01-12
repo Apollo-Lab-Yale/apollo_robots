@@ -1,13 +1,11 @@
 import numpy as np
 from planner import MujocoPlanner
-from http_client import RobotController
 import mujoco
 import time
 
 np.set_printoptions(precision=3)
 
 def main():
-    robot = RobotController()
     planner = MujocoPlanner()
     data = planner.data # Access MuJoCo data for initialization
 
@@ -44,28 +42,27 @@ def main():
 
     print(f"Executing Path with {len(path)} waypoints on the real robot...")
 
-    # Open Gripper (255 = fully open)
-    robot.set_gripper(255, speed=255, force=255)
+    # TODO: Open Gripper
 
     # Execute move to pick pose
-    robot.label_run("forward")
     for i, waypoint in enumerate(path):
-        # The gripperPos argument is for the *simulated* robot, setting it to an open value
-        robot.move_j(waypoint.tolist(), gripper_pos=-1.5, speed=0.7)
-
+        for _ in range(50):
+            data.ctrl[:6] = waypoint
+            mujoco.mj_step(planner.model, data)
+            if planner.viewer and planner.viewer.is_running():
+                planner.viewer.sync()
+                time.sleep(0.01)
 
         print(f"Reached Waypoint {i + 1}/{len(path)}")
 
-    # Close Gripper (0 = fully closed)
+    # TODO: Close Gripper
     print("Closing Gripper to pick object...")
-    robot.set_gripper(0, speed=255, force=255)
 
     # Delay for gripping (real robot operation)
     time.sleep(1.0)
 
+    # TODO: Return to start
     print("Returning to start position...")
-    robot.back_to_start()
-    robot.label_run("forward") # Keep moving until finished
 
     planner.close_viewer()
 
