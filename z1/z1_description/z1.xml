@@ -46,6 +46,7 @@
                   <inertial pos="0.0132063 0.00476708 0.00380534" quat="0.0631093 0.669067 -0.0615783 0.737953" mass="0.276213" diaginertia="0.000359044 0.000270888 0.000172378"/>
                   <joint name="jointGripper" pos="0 0 0" axis="0 1 0" range="-1.5708 0" actuatorfrcrange="-30 30" damping="1" frictionloss="1"/>
                   <geom type="mesh" rgba="0.3 0.3 0.3 1" name="z1_GripperMover" mesh="z1_GripperMover"/>
+                  <site name="attachment_site" size="0.01" pos="0 0.1 0" quat="-1 1 1 1" rgba="1 0 0 1" group="1"/>
                 </body>
               </body>
             </body>
@@ -71,4 +72,7 @@
         <position name="pos_j6" joint="joint6" kp="500" ctrlrange="-2.7 2.7"/>
         <position name="pos_gripper" joint="jointGripper" kp="100" ctrlrange="-1.5 0.0"/>
     </actuator>
+    <keyframe>
+      <key name="home" qpos="0 0 0 0 0 0" ctrl="0 0 0 0 0 0"/>
+    </keyframe>
 </mujoco>
