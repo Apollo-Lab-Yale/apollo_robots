@@ -20,6 +20,10 @@ dt: float = 0.002
 # Maximum allowable joint velocity in rad/s. Set to 0 to disable.
 max_angvel = 0.0
 
+# Keyboard step sizes
+pos_step = 0.02   # meters per keypress
+rot_step = 0.02    # radians per keypress
+
 
 def main() -> None:
     assert mujoco.__version__ >= "3.1.0", "Please upgrade to mujoco 3.1.0 or later."
@@ -97,8 +101,44 @@ def main() -> None:
         y = r * np.sin(2 * np.pi * f * t) + k
         return np.array([x, y])
 
+    def key_callback(key):
+        if chr(key) == 'W':
+            data.mocap_pos[mocap_id][0] += pos_step
+        if chr(key) == 'S':
+            data.mocap_pos[mocap_id][0] -= pos_step
+        if chr(key) == 'A':
+            data.mocap_pos[mocap_id][1] += pos_step
+        if chr(key) == 'D':
+            data.mocap_pos[mocap_id][1] -= pos_step
+        if chr(key) == 'Q':
+            data.mocap_pos[mocap_id][2] += pos_step
+        if chr(key) == 'E':
+            data.mocap_pos[mocap_id][2] -= pos_step
+
+        # Rotation (body frame)
+        quat = data.mocap_quat[mocap_id].copy()
+
+        def apply_rot(axis, angle):
+            dq = np.zeros(4)
+            mujoco.mju_axisAngle2Quat(dq, axis, angle)
+            mujoco.mju_mulQuat(quat, dq, quat)
+
+        if chr(key) == 'I':
+            apply_rot([1, 0, 0], rot_step)
+        if chr(key) == 'K':
+            apply_rot([1, 0, 0], -rot_step)
+        if chr(key) == 'J':
+            apply_rot([0, 1, 0], rot_step)
+        if chr(key) == 'L':
+            apply_rot([0, 1, 0], -rot_step)
+        if chr(key) == 'U':
+            apply_rot([0, 0, 1], rot_step)
+        if chr(key) == 'O':
+            apply_rot([0, 0, 1], -rot_step)
+        data.mocap_quat[mocap_id] = quat
+
     with mujoco.viewer.launch_passive(
-        model=model, data=data, show_left_ui=False, show_right_ui=False
+        model=model, data=data, show_left_ui=False, show_right_ui=False, key_callback=key_callback
     ) as viewer:
         # Reset the simulation to the initial keyframe.
         mujoco.mj_resetDataKeyframe(model, data, key_id)
@@ -113,7 +153,7 @@ def main() -> None:
             step_start = time.time()
 
             # Set the target position of the end-effector site.
-            data.mocap_pos[mocap_id, 0:2] = circle(data.time, 0.1, 0.5, 0.0, 0.5)
+            # data.mocap_pos[mocap_id, 0:2] = circle(data.time, 0.1, 0.5, 0.0, 0.5)
 
             # Position error.
             error_pos[:] = data.mocap_pos[mocap_id] - data.site(site_id).xpos
@@ -141,7 +181,11 @@ def main() -> None:
             mujoco.mj_integratePos(model, q, dq, integration_dt)
 
             # Set the control signal.
-            np.clip(q, *model.jnt_range.T, out=q)
+            q[dof_ids] = np.clip(
+                q[dof_ids],
+                model.jnt_range[dof_ids, 0],
+                model.jnt_range[dof_ids, 1],
+            )
             data.ctrl[actuator_ids] = q[dof_ids]
 
             # Step the simulation.
